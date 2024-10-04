@@ -96,3 +96,114 @@ const items = [
     rating: 4.1,
   },
 ];
+
+const template = document.querySelector("#item-template");
+const shopItem = document.querySelector("#shop-items");
+
+const button = document.querySelector("#search-btn");
+const input = document.querySelector("#search-input");
+const nothingFound = document.querySelector("#nothing-found");
+
+
+function useTemplate(item) {
+  const {title, description, img, price, tags, rating} = item;
+
+  const templateItem = template.content.cloneNode(true);
+
+  templateItem.querySelector("h1").textContent = title;
+  templateItem.querySelector("p").textContent = description;
+  templateItem.querySelector("img").src = img;
+  templateItem.querySelector(".price").textContent = `${price} руб.`;
+
+  const ratingContainer = templateItem.querySelector(".rating");
+  for (let i=0; i < rating; i++) {
+    const star = document.createElement("i");
+    star.classList.add("fa", "fa-star");
+    ratingContainer.append(star);
+  }
+
+  const tagsContainer = templateItem.querySelector(".tags"); 
+  tags.forEach((tag) => {                                    
+  const oneTag = document.createElement("span");                
+  oneTag.textContent = tag;
+  oneTag.classList.add("tag");                            
+  tagsContainer.append(oneTag);                           
+  });
+
+  return templateItem;
+}
+
+let currentState = [...items];
+
+function renderItems(arr) {
+  nothingFound.textContent = '';
+  shopItem.innerHTML = '';
+
+  arr.forEach((item) => {
+    const cardTemplate = useTemplate(item);
+    shopItem.append(cardTemplate);
+ })
+
+ if (!arr.length) {
+  nothingFound.textContent = 'Ничего не найдено';
+ }
+}
+
+renderItems(currentState.sort((a, b) => sortByAlphabet(a, b)));
+
+function sortByAlphabet(a, b) {
+  if (a.title > b.title) {
+    return 1;
+  }
+
+  if (a.title < b.title) {
+    return -1;
+  }
+
+  if (a.title === b.title) {
+    return 0;
+  }
+}
+
+const sortControl = document.querySelector("#sort");
+
+sortControl.addEventListener("change", (event) => {
+  const selectedOption = event.target.value;
+
+  switch (selectedOption) {
+    case "expensive": {
+      currentState.sort((a, b) => b.price - a.price);
+      break;
+    }
+    case "cheap": {
+      currentState.sort((a, b) => a.price - b.price);
+      break;
+    }
+    case "rating": {
+      currentState.sort((a, b) => b.rating - a.rating);
+      break;
+    }
+    case "alphabet": {
+      currentState.sort((a, b) => sortByAlphabet(a, b));
+      break;
+    }
+  }
+  renderItems(currentState);
+});
+
+function applySearch() {
+  const searchResult = input.value.trim().toLowerCase();
+
+  currentState = items.filter((el) =>
+    el.title.trim().toLowerCase().includes(searchResult)
+  );
+  
+  currentState.sort((a, b) => sortByAlphabet(a, b));
+
+  sortControl.selectedIndex = 0;
+
+  renderItems(currentState);
+}
+
+button.addEventListener("click", applySearch);
+input.addEventListener("search", applySearch);
